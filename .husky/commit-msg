@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+commit_msg_file="$1"
+commit_msg="$(cat "$commit_msg_file")"
+
+pattern='^(feat|fix|chore|docs|refactor|test|perf): .+ \[TASK-[0-9]+\]$'
+
+echo "$commit_msg" | grep -Eq "$pattern"
+if [ $? -ne 0 ]; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Required format:"
+  echo "feat: description [TASK-1234]"
+  echo ""
+  echo "Example:"
+  echo "feat: add login validation [TASK-1000]"
+  exit 1
+fi
