@@ -1,79 +1,261 @@
-# husky-commit-validator-template
+# Husky Commit Validation -- Maven Project
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project uses **Husky** to enforce:
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+1.  ✅ Run Maven tests before commit (`pre-commit`)
+2.  ✅ Enforce commit message format (`commit-msg`)
 
-## Running the application in dev mode
+------------------------------------------------------------------------
 
-You can run your application in dev mode that enables live coding using:
+# 📦 Requirements
 
-```shell script
-./mvnw quarkus:dev
+-   Node.js (LTS recommended)
+-   npm
+-   Git (Git for Windows includes Git Bash)
+-   Maven
+
+Check versions:
+
+``` bash
+node -v
+npm -v
+git --version
+mvn -v
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+------------------------------------------------------------------------
 
-## Packaging and running the application
+# 🚀 Installation & Setup
 
-The application can be packaged using:
+## 1️⃣ Initialize npm in Maven project
 
-```shell script
-./mvnw package
+``` bash
+npm init -y
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+## 2️⃣ Install Husky
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+``` bash
+npm install husky --save-dev
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+## 3️⃣ Enable Husky
 
-## Creating a native executable
+Add this to `package.json`:
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
+``` json
+{
+  "scripts": {
+    "prepare": "husky"
+  }
+}
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Then run:
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+``` bash
+npm run prepare
 ```
 
-You can then execute your native executable with: `./target/husky-commit-validator-template-1.0.0-SNAPSHOT-runner`
+Verify:
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+``` bash
+git config core.hooksPath
+```
 
-## Related Guides
+Expected:
 
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
+    .husky
 
-## Provided Code
+If you see:
 
-### Hibernate ORM
+    .husky/_
 
-Create your first JPA entity
+Fix it:
 
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
+``` bash
+git config core.hooksPath .husky
+```
 
+------------------------------------------------------------------------
 
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
+# 📂 Expected Folder Structure
 
+    project-root/
+     ├── pom.xml
+     ├── package.json
+     ├── node_modules/
+     └── .husky/
+          ├── _/
+          │    └── husky.sh
+          ├── pre-commit
+          └── commit-msg
 
-### REST
+⚠️ Hooks must NOT be inside `.husky/_`
 
-Easily start your REST Web Services
+------------------------------------------------------------------------
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+# 🧪 Pre-Commit Hook (Run Maven Tests)
+
+Create:
+
+`.husky/pre-commit`
+
+``` sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running Maven validation..."
+mvn test
+```
+
+Make executable:
+
+``` bash
+chmod +x .husky/pre-commit
+```
+
+If tests fail → commit is blocked.
+
+------------------------------------------------------------------------
+
+# 📝 Commit Message Validation
+
+Required format:
+
+    feat: description [TASK-1234]
+
+Allowed types:
+
+-   feat
+-   fix
+-   chore
+-   docs
+-   refactor
+-   test
+-   perf
+
+Create:
+
+`.husky/commit-msg`
+
+``` sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+commit_msg_file="$1"
+commit_msg="$(cat "$commit_msg_file")"
+
+pattern='^(feat|fix|chore|docs|refactor|test|perf): .+ \[TASK-[0-9]+\]$'
+
+echo "$commit_msg" | grep -Eq "$pattern"
+if [ $? -ne 0 ]; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Required format:"
+  echo "feat: description [TASK-1234]"
+  echo ""
+  echo "Example:"
+  echo "feat: add login validation [TASK-1000]"
+  exit 1
+fi
+```
+
+Make executable:
+
+``` bash
+chmod +x .husky/commit-msg
+```
+
+------------------------------------------------------------------------
+
+# ✅ Valid Commit Example
+
+``` bash
+git commit -m "feat: add login validation [TASK-1000]"
+```
+
+------------------------------------------------------------------------
+
+# ❌ Invalid Commit Example
+
+``` bash
+git commit -m "added stuff"
+```
+
+Commit will be blocked.
+
+------------------------------------------------------------------------
+
+# 💻 Windows / PowerShell Notes
+
+You can commit from PowerShell:
+
+``` powershell
+git commit -m "feat: add login validation [TASK-1000]"
+```
+
+Hooks run using Git's internal shell (Git Bash), not PowerShell.
+
+------------------------------------------------------------------------
+
+# 🛑 Skip Hooks (Temporary)
+
+``` bash
+git commit -m "message" --no-verify
+```
+
+------------------------------------------------------------------------
+
+# 🧯 Disable Husky Temporarily
+
+``` bash
+export HUSKY=0
+```
+
+Re-enable:
+
+``` bash
+unset HUSKY
+```
+
+------------------------------------------------------------------------
+
+# ❌ Completely Remove Husky
+
+``` bash
+rm -rf .husky
+npm uninstall husky
+rm package.json package-lock.json
+rm -rf node_modules
+git config --unset core.hooksPath
+```
+
+------------------------------------------------------------------------
+
+# 🧠 How It Works
+
+When you run:
+
+``` bash
+git commit
+```
+
+Git:
+
+1.  Reads `core.hooksPath`
+2.  Executes `.husky/pre-commit`
+3.  Executes `.husky/commit-msg`
+4.  If any script returns `exit 1` → commit fails
+
+Husky simply manages Git hook scripts inside `.husky`.
+
+------------------------------------------------------------------------
+
+# 🎯 Summary
+
+This setup ensures:
+
+-   ✅ No broken tests are committed
+-   ✅ All commits follow format:\
+    `feat: description [TASK-1234]`
