@@ -78,7 +78,7 @@
 #   accessed directly. (example: "foo.example.com,bar.example.com")
 #
 # You can find more information about the UBI base runtime images and their configuration here:
-# https://rh-openjdk.github.io/redhat-openjdk-containers/ dfdfdf
+# https://rh-openjdk.github.io/redhat-openjdk-containers/
 ###
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
